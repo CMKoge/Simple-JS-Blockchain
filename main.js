@@ -7,17 +7,29 @@ class Block {
         this.data = data;
         this.prevHash = prevHash;
         this.hash = this.calculateHash();
+        this.nonce = 0
     }
 
     // Calculate hash
     calculateHash() {
-        return SHA256(this.index + this.prevHash + this.timestamp + JSON.stringify(this.data)).toString();
+        return SHA256(this.index + this.prevHash + this.timestamp + JSON.stringify(this.data) + this.nonce).toString();
+    }
+
+    // Mine block with difficulty
+    mineBlock(difficulty) {
+        while (this.hash.substring(0, difficulty) !== Array(difficulty + 1).join('0')) {
+            this.nonce++
+            this.hash = this.calculateHash()
+        }
+
+        console.log('Block mined '+this.hash);
     }
 }
 
 class Blockchain {
     constructor() {
         this.chain = [this.createGenesisBlock()];
+        this.difficulty = 2
     }
 
     // Create genesis(first) block manually
@@ -31,7 +43,7 @@ class Blockchain {
 
     addBlock(newBlock) {
         newBlock.prevHash = this.getLatestBlock().hash;
-        newBlock.hash = newBlock.calculateHash();
+        newBlock.mineBlock(this.difficulty)
         this.chain.push(newBlock);
     }
 
@@ -57,15 +69,17 @@ class Blockchain {
 }
 
 let simpleBlock = new Blockchain();
+console.log('Mining block 1....');
 simpleBlock.addBlock(new Block(1, '2021/10/09', { amount: 1}));
+console.log('Mining block 2....');
 simpleBlock.addBlock(new Block(2, '2021/10/10', { amount: 2}));
 
-console.log('Is blockchain valid: '+simpleBlock.isChainValid());
+// console.log(JSON.stringify(simpleBlock, null, 4));
+// console.log('Is blockchain valid: '+simpleBlock.isChainValid());
 
 // Tampered with block
-simpleBlock.chain[1].data = {amount: 100}
-simpleBlock.chain[1].hash = simpleBlock.chain[1].calculateHash()
-
-console.log('Is blockchain valid: '+simpleBlock.isChainValid());
+// simpleBlock.chain[1].data = {amount: 100}
+// simpleBlock.chain[1].hash = simpleBlock.chain[1].calculateHash()
 
 // console.log(JSON.stringify(simpleBlock, null, 4));
+// console.log('Is blockchain valid: '+simpleBlock.isChainValid());
